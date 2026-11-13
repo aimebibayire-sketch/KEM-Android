@@ -1,0 +1,45 @@
+
+name: Build KEM Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "KEM_Android_source.zip"
+      - ".github/workflows/android.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Unpack KEM source
+        run: |
+          unzip -q KEM_Android_source.zip -d .
+          test -f KEM_Android/settings.gradle.kts
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Build APK
+        working-directory: KEM_Android
+        run: gradle --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KEM-Android-APK
+          path: KEM_Android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+          
